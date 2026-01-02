@@ -214,17 +214,13 @@ Contributions are welcome! Please:
 2. Create a feature branch
 3. Submit a pull request with clear description
 
-## License
 
-[Specify your license here]
 
 ## Disclaimer
 
 This system is for educational and research purposes. Trading involves substantial risk of loss. Past performance does not guarantee future results. Always conduct thorough testing and risk assessment before deploying in live markets.
 
-## Contact
 
-[Your contact information or link to issues page]
 
 ---
 
