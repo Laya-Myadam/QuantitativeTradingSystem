@@ -31,7 +31,7 @@ The system operates through three integrated layers:
 - **Price Prediction Models**: ARIMA, LSTM, and Prophet for time series forecasting
 - **Online Learning**: Continuous model updates based on market feedback
 - **Market Regime Detection**: Automatic identification of market conditions
-![Trading Dashboard](./docs/images/QTS-2.png)
+![Trading Dashboard](./docs/images/QTS-3.png)
 
 ### 3. **Execution & Risk Management Layer**
 - Pre-trade risk checks and position limits
@@ -179,20 +179,32 @@ Multiple layers of protection:
 
 ```
 quantitative-trading-system/
-├── backend/
+my-trading-bot/
+│
+├── backend/                          # Python code (the brain)
 │   ├── app/
-│   │   ├── main.py           # Application entry point
-│   │   ├── models/           # ML models
-│   │   ├── strategies/       # Trading strategies
-│   │   └── utils/            # Helper functions
-│   └── tests/
-├── docs/
-│   └── images/
-│       └── dashboard.png     # Dashboard screenshot
-├── dashboard.html            # Frontend dashboard
-├── requirements.txt          # Python dependencies
-├── config.yaml              # Configuration file
-└── README.md
+│   │   ├── __init__.py              # Empty file
+│   │   ├── main.py                  # Main server (I'll give you code)
+│   │   ├── models/
+│   │   │   ├── __init__.py          # Empty file
+│   │   │   ├── rl_agent.py          # AI trading agent
+│   │   │   └── forecaster.py        # Price prediction
+│   │   ├── data/
+│   │   │   ├── __init__.py          # Empty file
+│   │   │   └── data_pipeline.py     # Gets market data
+│   │   └── mlops/
+│   │       ├── __init__.py          # Empty file
+│   │       └── monitor.py           # Monitors performance
+│   ├── requirements.txt              # List of packages needed
+│   └── Dockerfile                    # For Docker (optional)
+│
+├── frontend/                         # Dashboard (what you see)
+│   ├── index.html                   # The webpage
+│   └── app.js                       # Dashboard code
+│
+├── docker-compose.yml               # Runs everything together
+├── .env                             # Your settings (SECRET - don't share!)
+└── README.md                        # Instructions
 ```
 
 ## Contributing
