@@ -379,10 +379,46 @@
             Loading predictions...
         </div>
     </div>
+    <!-- MLOps Monitoring Section -->
+<div class="chart-section">
+    <div class="section-title">
+        <span class="icon">🔍</span> MLOps Monitoring & Model Health
+    </div>
+    <div id="mlopsPanel">
+        <div class="loading">
+            <div class="spinner"></div>
+            Loading monitoring data...
+        </div>
+    </div>
+    <div style="margin-top: 15px; text-align: center;">
+        <button onclick="loadMLOps()" class="btn-refresh">🔄 Refresh Monitoring</button>
+        <button onclick="triggerRetrain()" class="btn-start">🔄 Trigger Retraining</button>
+    </div>
+</div>
+</div>
+        <!-- Real Market Data Section -->
+<div class="chart-section">
+    <div class="section-title">
+        <span class="icon">📈</span> Live Market Data
+    </div>
+
+    <div style="margin-bottom: 20px;">
+        <input type="text" id="symbolInput" placeholder="Enter symbol (e.g., AAPL)"
+               style="padding: 10px; background: #0f172a; color: white; border: 1px solid #334155; border-radius: 4px; width: 200px;">
+        <button onclick="loadRealData()" style="padding: 10px 20px; margin-left: 10px;">🔍 Get Live Data</button>
+        <button onclick="loadMarketMovers()" style="padding: 10px 20px; margin-left: 10px;">📊 Market Movers</button>
+    </div>
+
+    <div id="realDataPanel">
+        <div class="loading">
+            <div class="spinner"></div>
+            Enter a symbol to load live data...
+        </div>
+    </div>
 </div>
 
         <footer class="footer">
-            <p>✅ Phase 3 Complete: Dashboard Connected to Live API!</p>
+            <p>✅Dashboard Connected to Live API!</p>
             <p style="margin-top: 10px;">Auto-refreshing every 5 seconds</p>
         </footer>
     </div>
@@ -618,6 +654,329 @@ async function loadPredictions() {
 
 // Load predictions on page load
 setTimeout(loadPredictions, 2000);
+
+        // Load MLOps monitoring data
+async function loadMLOps() {
+    const panel = document.getElementById('mlopsPanel');
+
+    try {
+        panel.innerHTML = '<div class="loading"><div class="spinner"></div>Loading...</div>';
+
+        const response = await fetch(`${API_URL}/mlops/dashboard`);
+        const data = await response.json();
+
+        const monitoring = data.monitoring;
+        const drift = data.drift_detection;
+        const retraining = data.retraining;
+
+        // Determine status colors
+        const statusColors = {
+            'healthy': '#10b981',
+            'warning': '#f59e0b',
+            'critical': '#ef4444',
+            'stable': '#10b981'
+        };
+
+        const monitorColor = statusColors[monitoring.status] || '#64748b';
+        const driftColor = drift.detected ? '#ef4444' : '#10b981';
+
+        let html = `
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                <!-- Model Performance -->
+                <div style="background: #0f172a; padding: 20px; border-radius: 8px; border: 2px solid ${monitorColor};">
+                    <h3 style="color: ${monitorColor}; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 24px;">📊</span> Model Performance
+                    </h3>
+                    <div style="color: #94a3b8; margin-bottom: 10px;">
+                        Status: <strong style="color: ${monitorColor};">${monitoring.status.toUpperCase()}</strong>
+                    </div>
+                    <div style="color: #64748b; font-size: 14px;">${monitoring.message}</div>
+        `;
+
+        if (monitoring.current_metrics) {
+            html += `
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #334155;">
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                        <div>
+                            <div style="color: #64748b; font-size: 12px;">RMSE</div>
+                            <div style="font-size: 20px; color: #3b82f6;">${monitoring.current_metrics.rmse}</div>
+                        </div>
+                        <div>
+                            <div style="color: #64748b; font-size: 12px;">MAE</div>
+                            <div style="font-size: 20px; color: #3b82f6;">${monitoring.current_metrics.mae}</div>
+                        </div>
+                        <div>
+                            <div style="color: #64748b; font-size: 12px;">MAPE</div>
+                            <div style="font-size: 20px; color: #3b82f6;">${monitoring.current_metrics.mape}%</div>
+                        </div>
+                        <div>
+                            <div style="color: #64748b; font-size: 12px;">Direction Acc.</div>
+                            <div style="font-size: 20px; color: #10b981;">${monitoring.current_metrics.direction_accuracy}%</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        html += `
+                    <div style="margin-top: 10px; color: #64748b; font-size: 12px;">
+                        Total Predictions: ${monitoring.total_predictions || 0}
+                    </div>
+                </div>
+
+                <!-- Drift Detection -->
+                <div style="background: #0f172a; padding: 20px; border-radius: 8px; border: 2px solid ${driftColor};">
+                    <h3 style="color: ${driftColor}; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 24px;">⚠️</span> Drift Detection
+                    </h3>
+                    <div style="color: #94a3b8; margin-bottom: 10px;">
+                        Status: <strong style="color: ${driftColor};">${drift.detected ? 'DRIFT DETECTED' : 'STABLE'}</strong>
+                    </div>
+                    <div style="color: #64748b; font-size: 14px; margin-bottom: 15px;">${drift.recommendation}</div>
+
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 15px;">
+                        <div>
+                            <div style="color: #64748b; font-size: 12px;">PSI Score</div>
+                            <div style="font-size: 20px; color: #3b82f6;">${drift.psi_score || 0}</div>
+                        </div>
+                        <div>
+                            <div style="color: #64748b; font-size: 12px;">Confidence</div>
+                            <div style="font-size: 20px; color: #3b82f6;">${drift.confidence || 0}%</div>
+                        </div>
+                        <div>
+                            <div style="color: #64748b; font-size: 12px;">Mean Shift</div>
+                            <div style="font-size: 20px; color: #f59e0b;">${drift.mean_shift || 0}</div>
+                        </div>
+                        <div>
+                            <div style="color: #64748b; font-size: 12px;">Severity</div>
+                            <div style="font-size: 16px; color: ${driftColor};">${drift.severity || 'N/A'}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Retraining -->
+                <div style="background: #0f172a; padding: 20px; border-radius: 8px; border: 2px solid #3b82f6;">
+                    <h3 style="color: #3b82f6; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 24px;">🔄</span> Auto-Retraining
+                    </h3>
+                    <div style="color: #94a3b8; margin-bottom: 10px;">
+                        Should Retrain: <strong style="color: ${retraining.should_retrain ? '#f59e0b' : '#10b981'};">
+                            ${retraining.should_retrain ? 'YES' : 'NO'}
+                        </strong>
+                    </div>
+        `;
+
+        if (retraining.should_retrain) {
+            html += `<div style="color: #f59e0b; font-size: 14px; margin-bottom: 15px;">⚠️ ${retraining.reason}</div>`;
+        }
+
+        const schedule = retraining.schedule;
+        html += `
+                    <div style="margin-top: 15px; color: #64748b; font-size: 13px;">
+                        <div style="margin: 5px 0;">Last Retrain: ${new Date(schedule.last_retrain).toLocaleString()}</div>
+                        <div style="margin: 5px 0;">Next Scheduled: ${new Date(schedule.next_scheduled).toLocaleString()}</div>
+                        <div style="margin: 5px 0;">Total Retrains: ${schedule.total_retrains}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        panel.innerHTML = html;
+
+    } catch (error) {
+        panel.innerHTML = '<div style="color: #ef4444;">Error loading monitoring data</div>';
+        console.error(error);
+    }
+}
+
+async function triggerRetrain() {
+    if (!confirm('Are you sure you want to trigger model retraining?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/mlops/retrain`, { method: 'POST' });
+        const data = await response.json();
+
+        alert('✅ Model retraining completed successfully!');
+        loadMLOps(); // Refresh the panel
+    } catch (error) {
+        alert('❌ Failed to trigger retraining');
+        console.error(error);
+    }
+}
+
+// Load MLOps data on page load
+setTimeout(loadMLOps, 3000);
+
+        // Load real market data
+async function loadRealData() {
+    const symbol = document.getElementById('symbolInput').value.toUpperCase() || 'AAPL';
+    const panel = document.getElementById('realDataPanel');
+
+    try {
+        panel.innerHTML = '<div class="loading"><div class="spinner"></div>Loading real data...</div>';
+
+        // Get current price
+        const priceResponse = await fetch(`${API_URL}/market/price/${symbol}`);
+        const priceData = await priceResponse.json();
+
+        // Get company info
+        const infoResponse = await fetch(`${API_URL}/market/info/${symbol}`);
+        const infoData = await infoResponse.json();
+
+        // Get historical data
+        const histResponse = await fetch(`${API_URL}/market/historical/${symbol}?days=5`);
+        const histData = await histResponse.json();
+
+        const changeColor = priceData.change >= 0 ? '#10b981' : '#ef4444';
+
+        let html = `
+            <div style="background: #0f172a; padding: 20px; border-radius: 8px;">
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 20px;">
+                    <div>
+                        <h2 style="color: #3b82f6; margin-bottom: 10px;">${priceData.company_name || symbol}</h2>
+                        <div style="font-size: 48px; font-weight: bold; color: white; margin: 10px 0;">
+                            $${priceData.price.toFixed(2)}
+                        </div>
+                        <div style="font-size: 20px; color: ${changeColor}; margin-bottom: 20px;">
+                            ${priceData.change >= 0 ? '+' : ''}${priceData.change.toFixed(2)}
+                            (${priceData.change_percent >= 0 ? '+' : ''}${priceData.change_percent.toFixed(2)}%)
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 10px;">
+                        <div style="background: #1e293b; padding: 15px; border-radius: 8px;">
+                            <div style="color: #64748b; font-size: 12px;">Market Cap</div>
+                            <div style="font-size: 18px; color: #3b82f6;">
+                                $${(priceData.market_cap / 1e9).toFixed(2)}B
+                            </div>
+                        </div>
+                        <div style="background: #1e293b; padding: 15px; border-radius: 8px;">
+                            <div style="color: #64748b; font-size: 12px;">P/E Ratio</div>
+                            <div style="font-size: 18px; color: #3b82f6;">
+                                ${priceData.pe_ratio ? priceData.pe_ratio.toFixed(2) : 'N/A'}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px;">
+                    <div style="background: #1e293b; padding: 15px; border-radius: 8px; text-align: center;">
+                        <div style="color: #64748b; font-size: 12px;">Open</div>
+                        <div style="font-size: 18px; font-weight: bold;">$${priceData.open.toFixed(2)}</div>
+                    </div>
+                    <div style="background: #1e293b; padding: 15px; border-radius: 8px; text-align: center;">
+                        <div style="color: #64748b; font-size: 12px;">High</div>
+                        <div style="font-size: 18px; font-weight: bold; color: #10b981;">$${priceData.high.toFixed(2)}</div>
+                    </div>
+                    <div style="background: #1e293b; padding: 15px; border-radius: 8px; text-align: center;">
+                        <div style="color: #64748b; font-size: 12px;">Low</div>
+                        <div style="font-size: 18px; font-weight: bold; color: #ef4444;">$${priceData.low.toFixed(2)}</div>
+                    </div>
+                    <div style="background: #1e293b; padding: 15px; border-radius: 8px; text-align: center;">
+                        <div style="color: #64748b; font-size: 12px;">Volume</div>
+                        <div style="font-size: 18px; font-weight: bold;">${(priceData.volume / 1e6).toFixed(2)}M</div>
+                    </div>
+                </div>
+
+                <div style="background: #1e293b; padding: 15px; border-radius: 8px;">
+                    <h4 style="margin-bottom: 10px; color: #94a3b8;">Company Info</h4>
+                    <div style="color: #64748b; font-size: 14px; line-height: 1.6;">
+                        <div><strong>Sector:</strong> ${infoData.sector || 'N/A'}</div>
+                        <div><strong>Industry:</strong> ${infoData.industry || 'N/A'}</div>
+                        <div><strong>52 Week High:</strong> $${infoData['52_week_high'] || 'N/A'}</div>
+                        <div><strong>52 Week Low:</strong> $${infoData['52_week_low'] || 'N/A'}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        panel.innerHTML = html;
+
+        // Also update the prediction dropdown to this symbol
+        document.getElementById('symbolSelect').value = symbol;
+        loadPredictions();
+
+    } catch (error) {
+        panel.innerHTML = '<div style="color: #ef4444;">Error loading real market data. Make sure the symbol is valid.</div>';
+        console.error(error);
+    }
+}
+
+async function loadMarketMovers() {
+    const panel = document.getElementById('realDataPanel');
+
+    try {
+        panel.innerHTML = '<div class="loading"><div class="spinner"></div>Loading market movers...</div>';
+
+        const response = await fetch(`${API_URL}/market/movers`);
+        const data = await response.json();
+
+        let html = '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">';
+
+        // Top Gainers
+        html += '<div style="background: #0f172a; padding: 20px; border-radius: 8px; border: 2px solid #10b981;">';
+        html += '<h3 style="color: #10b981; margin-bottom: 15px;">📈 Top Gainers</h3>';
+        data.gainers.forEach(stock => {
+            html += `
+                <div style="background: #1e293b; padding: 10px; margin-bottom: 10px; border-radius: 6px;">
+                    <div style="font-weight: bold;">${stock.symbol}</div>
+                    <div style="font-size: 14px; color: #94a3b8;">${stock.name}</div>
+                    <div style="font-size: 18px; color: #10b981; margin-top: 5px;">
+                        +${stock.change_percent.toFixed(2)}%
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+
+        // Top Losers
+        html += '<div style="background: #0f172a; padding: 20px; border-radius: 8px; border: 2px solid #ef4444;">';
+        html += '<h3 style="color: #ef4444; margin-bottom: 15px;">📉 Top Losers</h3>';
+        data.losers.forEach(stock => {
+            html += `
+                <div style="background: #1e293b; padding: 10px; margin-bottom: 10px; border-radius: 6px;">
+                    <div style="font-weight: bold;">${stock.symbol}</div>
+                    <div style="font-size: 14px; color: #94a3b8;">${stock.name}</div>
+                    <div style="font-size: 18px; color: #ef4444; margin-top: 5px;">
+                        ${stock.change_percent.toFixed(2)}%
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+
+        // Most Active
+        html += '<div style="background: #0f172a; padding: 20px; border-radius: 8px; border: 2px solid #3b82f6;">';
+        html += '<h3 style="color: #3b82f6; margin-bottom: 15px;">🔥 Most Active</h3>';
+        data.most_active.forEach(stock => {
+            html += `
+                <div style="background: #1e293b; padding: 10px; margin-bottom: 10px; border-radius: 6px;">
+                    <div style="font-weight: bold;">${stock.symbol}</div>
+                    <div style="font-size: 14px; color: #94a3b8;">${stock.name}</div>
+                    <div style="font-size: 14px; color: #3b82f6; margin-top: 5px;">
+                        Vol: ${(stock.volume / 1e6).toFixed(1)}M
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+
+        html += '</div>';
+        panel.innerHTML = html;
+
+    } catch (error) {
+        panel.innerHTML = '<div style="color: #ef4444;">Error loading market movers</div>';
+        console.error(error);
+    }
+}
+
+// Load AAPL data by default after 4 seconds
+setTimeout(() => {
+    document.getElementById('symbolInput').value = 'AAPL';
+    loadRealData();
+}, 4000);
     </script>
 </body>
 </html>

@@ -275,6 +275,127 @@ def get_forecast_accuracy():
     }
 
 # ============================================
+# MLOPS MONITORING ENDPOINTS
+# ============================================
+
+from mlops.monitor import (
+    monitor, drift_detector, retrain_scheduler,
+    get_mlops_dashboard, simulate_monitoring_data
+)
+
+@app.get("/mlops/dashboard")
+def mlops_dashboard():
+    """
+    Get complete MLOps monitoring dashboard
+    """
+    return get_mlops_dashboard()
+
+@app.get("/mlops/drift")
+def check_drift():
+    """
+    Check for model drift
+    """
+    return drift_detector.check_drift()
+
+@app.get("/mlops/drift/report")
+def drift_report():
+    """
+    Get comprehensive drift report
+    """
+    return drift_detector.get_drift_report()
+
+@app.get("/mlops/performance")
+def model_performance():
+    """
+    Get model performance monitoring
+    """
+    return monitor.get_summary()
+
+@app.post("/mlops/retrain")
+def trigger_retraining():
+    """
+    Manually trigger model retraining
+    """
+    result = retrain_scheduler.trigger_retrain("Manual trigger via API")
+    return {
+        'success': True,
+        'retrain_record': result,
+        'message': 'Model retraining completed successfully'
+    }
+
+@app.get("/mlops/retrain/schedule")
+def get_retrain_schedule():
+    """
+    Get retraining schedule information
+    """
+    return retrain_scheduler.get_retrain_schedule()
+
+@app.post("/mlops/simulate")
+def simulate_drift():
+    """
+    Simulate monitoring data for testing
+    """
+    simulate_monitoring_data()
+    return {
+        'success': True,
+        'message': 'Simulated monitoring data generated'
+    }
+
+# ============================================
+# REAL MARKET DATA ENDPOINTS
+# ============================================
+
+from data.market_data import market_data
+
+@app.get("/market/price/{symbol}")
+def get_real_time_price(symbol: str):
+    """Get real-time price for a stock"""
+    return market_data.get_current_price(symbol.upper())
+
+@app.get("/market/historical/{symbol}")
+def get_historical(symbol: str, days: int = 60):
+    """Get historical OHLCV data"""
+    data = market_data.get_historical_data(symbol.upper(), days=days)
+    return {
+        'symbol': symbol.upper(),
+        'data': data,
+        'count': len(data)
+    }
+
+@app.get("/market/movers")
+def get_market_movers():
+    """Get top gainers, losers, and most active stocks"""
+    return market_data.get_market_movers()
+
+@app.get("/market/info/{symbol}")
+def get_company_info(symbol: str):
+    """Get detailed company information"""
+    return market_data.get_company_info(symbol.upper())
+
+@app.get("/market/search/{query}")
+def search_stocks(query: str):
+    """Search for stock symbols"""
+    results = market_data.search_symbols(query)
+    return {'query': query, 'results': results}
+
+@app.get("/market/quotes")
+def get_multiple_quotes(symbols: str):
+    """
+    Get quotes for multiple symbols
+    Example: /market/quotes?symbols=AAPL,GOOGL,MSFT
+    """
+    symbol_list = [s.strip().upper() for s in symbols.split(',')]
+    return market_data.get_multiple_quotes(symbol_list)
+
+@app.post("/market/clear-cache")
+def clear_market_cache():
+    """Clear market data cache"""
+    market_data.clear_cache()
+    return {"success": True, "message": "Cache cleared"}
+
+
+
+# ============================================
 # RUN THE SERVER
 # ============================================
 
